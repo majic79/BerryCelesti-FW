@@ -18,17 +18,6 @@
 
 #include "Protocol.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern RingBuffer rRX;
-extern RingBuffer rTX;
-
-#ifdef __cplusplus
-};
-#endif
-
 class Program {
 	protected:
 		FILE uart_stream;
@@ -47,6 +36,8 @@ class Program {
 
 		TimerError timer_error;
 		
+		RingBuffer rRX;
+		RingBuffer rTX;
 		UARTDriver uart;
 
 		Program();
@@ -55,6 +46,7 @@ class Program {
 		void HandleSerialPort(SPIBuffer& buf);
 		void PrintDebug(uint16_t sysMillis, char* debugString);
 		void MainLoop();
+		timestamp_t GetTimeStamp(uint16_t rtc, uint16_t ms, uint16_t us);
 };
 
 extern Program program;

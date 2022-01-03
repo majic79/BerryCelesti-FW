@@ -14,7 +14,7 @@
 
 ISR(USART0_RXC_vect) {
 	// Handle interrupt
-	rRX.buffer_put(program.uart._usart.RXDATAL);
+	program.rRX.buffer_put(program.uart._usart.RXDATAL);
 	program.uart._usart.STATUS |= USART_RXCIF_bm;
 }
 
@@ -25,8 +25,8 @@ ISR(USART0_TXC_vect) {
 
 ISR(USART0_DRE_vect) {
 	// Handle interrupt
-	if(!rTX.ring_is_empty()) {
-		program.uart._usart.TXDATAL = rTX.buffer_get();
+	if(!program.rTX.ring_is_empty()) {
+		program.uart._usart.TXDATAL = program.rTX.buffer_get();
 	} else {
 		program.uart._usart.CTRLA &= ~USART_DREIE_bm;
 	}

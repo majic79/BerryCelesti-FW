@@ -13,23 +13,13 @@
 #include "SPIPort.h"
 #include "UART.h"
 
-//#define CLOCK_PERIOD 4096	// Fast turn
-//#define CLOCK_PERIOD 59658
-//#define CLOCK_PERIOD 0x00018465
-//#define CLOCK_PERIOD 0x0004E488
-//#define CLOCK_PERIOD 
-//#define CLOCK_PERIOD 320648L
-//#define CLOCK_PERIOD 10020 // 1/32 microstepping of above
-
 // Right Ascension Clock period for continuous rotation as microseconds period between pulses (full step - needs to be corrected for microstepping)
 #define CLOCK_PERIOD ((1000000L / STEPS_PER_REV))
 
 uint8_t rxbuf[BUFFER_SIZE];
 uint8_t txbuf[BUFFER_SIZE];
-RingBuffer rTX(txbuf, BUFFER_SIZE);
-RingBuffer rRX(txbuf, BUFFER_SIZE);
 
-Program::Program() :
+Program::Program() : rRX(rxbuf, BUFFER_SIZE), rTX(txbuf, BUFFER_SIZE),
 	uart(USART0, PORTA, (uint16_t)USART_BAUD_RATE(115200), &rRX, &rTX),
 	timer(TCA0), clock(RTC),
 	raStepper(PORTC, pBuf.raMotor), decStepper(PORTD, pBuf.decMotor), spi(SPI0)
@@ -68,9 +58,9 @@ void Program::Setup()
 	uart.SetupUART();
 
 	raStepper.SetupStepperPort();
-	raStepper.SetStepping(STEP_1_16);
+	raStepper.SetStepping(STEP_1_32);
 	raStepper.SetStepMode(STEP_MODE_CONTINUOUS);
-	uint32_t period = CLOCK_PERIOD;
+	uint32_t period = CLOCK_PERIOD << 2;
 	uint16_t pm = 0;
 	uint16_t perr = 0;
 	uint8_t s = static_cast<uint8_t>(raStepper.GetStepping());
@@ -85,25 +75,26 @@ void Program::Setup()
 	raStepper.SetDir(STEP_DIR0);
 
 	decStepper.SetupStepperPort();
-	decStepper.SetStepping(STEP_1_32);
+	decStepper.SetStepping(STEP_1_16);
 	decStepper.SetStepMode(STEP_MODE_DISCRETE);
 	decStepper.SetPeriod(decStepper.MinPeriod(),0);
 	decStepper.SetDir(STEP_DIR0);
 
 	raStepper.Enable();
 	decStepper.Enable();
-	
-    printf("Test");
 
-    pDriver.UpdateProtocolInfo(clock.GetTick(), 0, pBuf.raMotor, pBuf.decMotor);
+	_rtcTick = clock.GetTick();
+	uint16_t ms = timer.Millis();
+	uint16_t us = timer.Micros();
+	
+	timestamp_t ts = GetTimeStamp(_rtcTick, ms, us);
+
+    pDriver.UpdateProtocolInfo(ts, 0, pBuf.raMotor, pBuf.decMotor);
 
 	SetupUnusedPins();
 	
 	_delay_ms(2);
 
-    //pDriver.PrintBuffer();
-
-	_rtcTick = clock.GetTick();
 }
 
 void Program::HandleSerialPort(SPIBuffer& buf)
@@ -114,25 +105,38 @@ void Program::HandleSerialPort(SPIBuffer& buf)
 	}
 }
 
+timestamp_t Program::GetTimeStamp(uint16_t rtc, uint16_t ms, uint16_t us) {
+	uint32_t ts = rtc;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		ts *= 1000;
+		ts += ms;
+		ts *= 1000;
+		ts += us;
+	}
+	return ts;
+}
+
 void Program::MainLoop()
 {
 	uint16_t ms = timer.Millis();
 	uint16_t us = timer.Micros();
 	uint16_t rtc = clock.GetTick();
+
+	timestamp_t ts = GetTimeStamp(rtc, ms, us);
 	
 	// Handle SPI stuff...
 	//SPIBuffer& spiBuf = spi.GetBuffer();
 	//HandleSerialPort(spiBuf);
 	
-	raStepper.DoSteps(us);
-	decStepper.DoSteps(us);
+	raStepper.DoSteps(ts);
+	decStepper.DoSteps(ts);
 	
 	pDriver.PrintBuffer();
 	if(_rtcTick != rtc) {
 		_tick_err += timer.Error.Microseconds;
 		_rtcTick = rtc;
 
-        pDriver.UpdateProtocolInfo(rtc, timer.Error.Microseconds, pBuf.raMotor, pBuf.decMotor);
+        pDriver.UpdateProtocolInfo(ts, timer.Error.Microseconds, pBuf.raMotor, pBuf.decMotor);
 		pDriver.RestartDebug();
 		//steps = stepsPerRev;
 		// Adjust RA Stepper Speed

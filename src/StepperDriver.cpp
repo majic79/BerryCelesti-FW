@@ -107,25 +107,24 @@ void StepperDriver::SetStepMode(STEP_MODE mode) {
 	_settings.control = m;
 }
 
-void StepperDriver::DoSteps(uint16_t sys_us) {
-	uint16_t t = sys_us - _settings.tick;
-	/*
+void StepperDriver::DoSteps(timestamp_t ts) {
+	timestamp_t t;
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		t = (int16_t)(((int32_t)sys_us) - ((int32_t)_settings.tick));
+		t = ts - _settings.tick;
 	}
-	*/
+
 	switch(_settings.stepState) {
 		case STEP_STATE_WAITHIGH:
 			if(t >= MIN_PULSE){
 				_port.OUTCLR = STEP_EN;
 				_settings.stepState = STEP_STATE_WAITLOW;
 			}
-//			break;
+			break;
 		case STEP_STATE_WAITLOW:
 			if(t >= _settings.period) {
 				_settings.stepState = STEP_STATE_IDLE;
 			}
-//			break;
+			break;
 		default:
 			// Do nothing if we are disabled
 			if( !_settings.Enabled() ) return;
@@ -133,26 +132,23 @@ void StepperDriver::DoSteps(uint16_t sys_us) {
 			STEP_MODE mode = _settings.StepMode();
 			STEP_DIR dir = _settings.StepDir();
 			if((mode == STEP_MODE_CONTINUOUS) || (_settings.stepActual != _settings.stepTarget)) {
-				/*
 				if(t < _settings.period ) {
 					// Too soon, junior..
 					return;
 				}
-				*/
-				//printf("%d\r\n", t);
 
 				_port.OUTSET = STEP_EN;
-				_settings.tick += _settings.period;	// Set next tick setpoint
+				_settings.stepState = STEP_STATE_WAITHIGH;
+
 				_tick_err += _period_error;
 				uint8_t s = static_cast<uint8_t>(GetStepping());
-				t = _tick_err >> s;
-				if(t > 0)
-				{
-					_settings.tick += 2;
-					_tick_err -= t << s;
+				uint16_t te = _tick_err >> s;
+				if(te > 0) {
+					_settings.tick++;
+					_tick_err -= te << s;
 				}
-				_settings.stepState = STEP_STATE_WAITHIGH;
 				ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+					_settings.tick += (timestamp_t)_settings.period;	// Set next tick setpoint
 					if(dir == STEP_DIR0)
 						_settings.stepActual++;
 					else
@@ -163,7 +159,7 @@ void StepperDriver::DoSteps(uint16_t sys_us) {
 				}
 			} else {
 				// truly, we are idle
-				_settings.tick = sys_us;
+				_settings.tick = ts;
 			}
 	}
 }

@@ -20,3 +20,5 @@
 
 // iostream library not present, so we're relying on the old C printf functions, instead of proper stream handlers
 #include <stdio.h>
+
+typedef uint32_t timestamp_t;

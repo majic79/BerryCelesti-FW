@@ -16,7 +16,7 @@ extern "C" {
 
 typedef struct {
 	uint16_t bufSize;
-	uint16_t tick;
+	timestamp_t tick;
 	int16_t tick_error;
 	StepperSettings raMotor;
 	StepperSettings decMotor;	
@@ -33,7 +33,7 @@ class ProtocolDriver {
 		void PrintStepperSettings(StepperSettings &settings, uint8_t debug_offset);
 	public:
 		ProtocolDriver() { };
-		void UpdateProtocolInfo(uint16_t tick, int16_t tick_error, StepperSettings raMotor, StepperSettings decMotor);
+		void UpdateProtocolInfo(timestamp_t tick, int16_t tick_error, StepperSettings raMotor, StepperSettings decMotor);
 		void PrintBuffer();
 		inline void RestartDebug() {
 			_debug_state = 0;

@@ -22,14 +22,13 @@ uint16_t SysMicros();
 #endif
 
 #define TIMER_PERIOD 0x03E8 // 1000 ticks = 1ms
+// If I could get a Divide by 7 on the clock cycles, then I could us a base2 factor for timing which would save a few multiplies
+//#define TIMER_PERIOD 0x0400 // 1024 ticks = 1ms
 
 struct TimerError {
 	int16_t Milliseconds;
 	int16_t Microseconds;
 };
-
-//uint16_t sys_micros_h;
-//uint16_t sys_millis;
 
 class Timer {
 	private:

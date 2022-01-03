@@ -1,6 +1,6 @@
 #include "Protocol.h"
 
-void ProtocolDriver::UpdateProtocolInfo(uint16_t tick, int16_t tick_error, StepperSettings raMotor, StepperSettings decMotor) {
+void ProtocolDriver::UpdateProtocolInfo(timestamp_t tick, int16_t tick_error, StepperSettings raMotor, StepperSettings decMotor) {
     info.bufSize = sizeof(ProtocolInfo);
     info.tick = tick;
     info.tick_error = tick_error;
@@ -14,7 +14,7 @@ void ProtocolDriver::PrintBuffer() {
             printf("P: %u\r\n", info.bufSize);
             break;
         case 1:
-            printf("\tr: %u\r\n", info.tick);
+            printf("\tr: %lu\r\n", info.tick);
             break;
         case 2:
             printf("\trt Err: %d\r\n", info.tick_error);
@@ -42,7 +42,7 @@ void ProtocolDriver::PrintStepperSettings(StepperSettings &s, uint8_t debug_stat
             printf("\t\tc: %0x, %0x %0x %0x\r\n", s.control, s.Enabled(), s.StepDir() , s.StepMode());
             break;
         case 1:
-            printf("\t\tt: %0d\r\n", s.tick);
+            printf("\t\tt: %0lu\r\n", s.tick);
             break;
         case 2:
             printf("\t\ts: %0x\r\n", s.stepState);

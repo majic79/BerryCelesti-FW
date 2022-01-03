@@ -72,7 +72,7 @@ typedef struct {
 	uint8_t control;	// Enabled, Dir, reserved, Step/Cont [4 bits] | microstepping [4 bits]
 	uint8_t reserved;
 	uint8_t stepState;
-	uint16_t tick;		// Current "tick" (in microseconds)
+	timestamp_t tick;		// Current "tick" (in microseconds)
 	uint16_t accel;		// Steps/Sec squared
 	int32_t stepTarget;		// target steps	- target position expressed in full steps
 	int32_t stepActual;		// Actual steps - actual position expressed in full steps
@@ -124,7 +124,7 @@ class StepperDriver {
 		void SetPeriod(uint16_t period, uint16_t period_error);
 		void SetSteps(uint32_t steps);
 		void AddSteps(int16_t steps);
-		void DoSteps(uint16_t sys_us);
+		void DoSteps(timestamp_t ts);
 		void SetStepMode(STEP_MODE mode);
 		
 		inline uint16_t MinPeriod() {
