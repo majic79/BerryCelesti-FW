@@ -24,13 +24,12 @@
 
 #define BUFFER_SIZE 255
 
-class RingBuffer {
-	private:
+struct RingBuffer {
 	volatile uint8_t _write_offset;
 	volatile uint8_t _read_offset;
 	uint8_t _size;
 	uint8_t *_buffer;
-	public:
+
 	RingBuffer(uint8_t *buffer, uint8_t size) {
 		_write_offset = 0;
 		_read_offset = 0;

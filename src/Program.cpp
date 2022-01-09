@@ -85,7 +85,7 @@ void Program::Setup()
 	raStepper.SetDir(STEP_DIR0);
 
 	decStepper.SetupStepperPort();
-	decStepper.SetStepping(STEP_1_16);
+	decStepper.SetStepping(STEP_1_4);
 	decStepper.SetStepMode(STEP_MODE_DISCRETE);
 	decStepper.SetPeriod(decStepper.MinPeriod(),0);
 	decStepper.SetDir(STEP_DIR0);

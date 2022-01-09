@@ -19,28 +19,36 @@
 #pragma once
 
 #include "Hardware.h"
+#include "Timer.h"
 
-class Clock {
-	protected:
+struct Clock {
+	RTC_t& _rtc;
+	uint16_t tick;
+	Clock(RTC_t& rtc);
+	void Setup();
+	void SetPeriod(uint16_t period);
+	void SetPIT();
+
+	inline uint16_t GetTick() {
+		return tick;
+	}
 	
-	public:
-		RTC_t& _rtc;
-		uint16_t tick;
-		Clock(RTC_t& rtc);
-		void Setup();
-		void SetPeriod(uint16_t period);
-		void SetPIT();
-		inline uint16_t GetTick() {
-			return tick;
-		}
-		
-		inline void ISR_PIT() {
-			// Programmable Interrupt Timer
-			_rtc.PITINTFLAGS = RTC_PI_bm;
-		}
-		
-		inline void ISR_CNT() {
-			// CNT increment interrupt
-			_rtc.INTFLAGS = RTC_OVF_bm;
-		}
+	inline void ISR_PIT(Timer &timer) {
+		// Programmable Interrupt Timer
+		_rtc.PITINTFLAGS = RTC_PI_bm;
+
+		tick++;
+	
+		// Calc error
+		uint16_t us = timer.Micros();
+		uint16_t ms = timer.Millis();
+		timer.CalculateError(ms, us);
+
+		timer.Reset();
+	}
+	
+	inline void ISR_CNT() {
+		// CNT increment interrupt
+		_rtc.INTFLAGS = RTC_OVF_bm;
+	}
 };

@@ -23,22 +23,11 @@
 ISR(RTC_CNT_vect)
 {
 	program.clock.ISR_CNT();
-	printf("RTC_CNT\r\n");
 }
 
 ISR(RTC_PIT_vect)
 {
-	program.clock.ISR_PIT();
-	program.clock.tick++;
-	
-	// Calc error
-	uint16_t us = program.timer.Micros();
-	uint16_t ms = program.timer.Millis();
-	program.timer.CalculateError(ms, us);
-	//printf("%u %03u %03u\r\n", program.clock.tick, ms, us);
-
-	program.timer.Reset();
-	//printf("RTC_PIT\r\n");
+	program.clock.ISR_PIT(program.timer);
 }
 
 Clock::Clock(RTC_t& rtc) : _rtc(rtc)

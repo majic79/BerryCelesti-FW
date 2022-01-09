@@ -41,14 +41,14 @@ struct TimerError {
 	int16_t Microseconds;
 };
 
-class Timer {
-	private:
-		uint16_t millis;
-	public:
-		TimerError Error;
+struct Timer {
 		TCA_t &_timer;
 
+		uint16_t millis;
+		TimerError Error;
+
 		Timer(TCA_t &timer);
+
 		void Setup();
 		
 		inline void ISRHandler() {
@@ -58,7 +58,7 @@ class Timer {
 		
 		inline void Reset() {
 			millis = 0;
-			//_timer.SINGLE.CNT = 0;
+			_timer.SINGLE.CNT = 0;
 		}
 		
 		inline uint16_t Millis() {

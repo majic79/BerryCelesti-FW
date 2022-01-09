@@ -56,7 +56,7 @@ void StepperDriver::SetStepping(STEPPING_STEPS stepping) {
 	_port.OUT = p;
 
 	_minPeriod = ((uint16_t)STEP_PERIOD >> static_cast<uint8_t>(stepping));
-	if(_minPeriod < 2) _minPeriod = 2;
+	if(_minPeriod < 4) _minPeriod = 4;
 	_settings.control = (_settings.control & 0xF0) | static_cast<uint8_t>(stepping) & 0x0F;
 }
 
@@ -125,7 +125,7 @@ void StepperDriver::DoSteps(timestamp_t ts) {
 
 	switch(_settings.stepState) {
 		case STEP_STATE_WAITHIGH:
-			if(t >= MIN_PULSE){
+			if(t >= (_settings.period >> 1)){
 				_port.OUTCLR = STEP_EN;
 				_settings.stepState = STEP_STATE_WAITLOW;
 			}
@@ -169,7 +169,7 @@ void StepperDriver::DoSteps(timestamp_t ts) {
 				}
 			} else {
 				// truly, we are idle
-				_settings.tick = ts;
+				_settings.tick = ts - _settings.period;
 			}
 	}
 }

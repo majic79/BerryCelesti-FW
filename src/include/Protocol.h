@@ -36,7 +36,7 @@ typedef struct {
 };
 #endif
 
-class ProtocolDriver {
+struct ProtocolDriver {
 	protected:
 		uint8_t _debug_state;
 		ProtocolInfo info;
